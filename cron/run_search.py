@@ -1,28 +1,61 @@
+import math
 from search.sources.zillow import fetch_listings
+from ai.scorer import score_listings
 
-def run_search():
-    listings = fetch_listings()
-    condensed = condense_listings(listings)
-    for listing in condensed:
-        print()
-        print(listing)
-        print()
+AUGUSTANA_LAT = 41.50302625752872
+AUGUSTANA_LNG = -90.55139102323895
+
+CRITERIA = {
+    "bedrooms_preferred": 3,
+    "bedrooms_min": 2,
+    "bathrooms": "1-2",
+    "max_price": 85000,
+    "max_distance_miles": 0.6
+}
+
+def distance_from_augustana(lat, lng):
+    R = 3958.8
+    lat1 = math.radians(AUGUSTANA_LAT)
+    lat2 = math.radians(lat)
+    dlat = math.radians(lat - AUGUSTANA_LAT)
+    dlng = math.radians(lng - AUGUSTANA_LNG)
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
+    return R * 2 * math.asin(math.sqrt(a))
 
 def condense_listings(listings):
     result = []
     for listing in listings:
-        if listing["homeStatus"] == "FOR_SALE" and listing["price"] != 0:
-            result.append({
-                "address": listing["address"],
-                "price": listing["price"],
-                "bedrooms": listing["bedrooms"],
-                "bathrooms": listing["bathrooms"],
-                "type": listing["homeType"],
-                "hours_since": listing["flexFieldText"],
-                "details": listing["detailUrl"],
-                "img": listing["imgSrc"],
-            })
+        if (listing["homeStatus"] == "FOR_SALE"
+            and listing["price"] != 0
+            and listing["homeType"] == "SINGLE_FAMILY"):
+            distance = distance_from_augustana(listing["latitude"], listing["longitude"])
+            if distance <= CRITERIA["max_distance_miles"]:
+                result.append({
+                    "address": listing["address"],
+                    "price": listing["price"],
+                    "bedrooms": listing["bedrooms"],
+                    "bathrooms": listing["bathrooms"],
+                    "living_area_sqft": listing["livingArea"],
+                    "days_on_zillow": listing["daysOnZillow"],
+                    "price_change": listing["priceChange"],
+                    "zestimate": listing["zestimate"],
+                    "tax_assessed_value": listing["taxAssessedValue"],
+                    "status_text": listing["statusText"],
+                    "flex_field": listing["flexFieldText"],
+                    "distance_miles": round(distance, 2),
+                    "details": listing["detailUrl"],
+                    "img": listing["imgSrc"],
+                })
     return result
+
+def run_search():
+    listings = fetch_listings()
+    condensed = condense_listings(listings)
+    scored = score_listings(condensed, CRITERIA)
+    for listing in scored:
+        print()
+        print(listing)
+        print()
 
 if __name__ == "__main__":
     run_search()
