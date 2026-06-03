@@ -1,16 +1,20 @@
 import math
 from search.sources.zillow import fetch_listings
 from ai.scorer import score_listings
+from db.database import init_db, get_last_price, upsert_listing
 
 AUGUSTANA_LAT = 41.50302625752872
 AUGUSTANA_LNG = -90.55139102323895
+PRICE_DROP_THRESHOLD = 0.95
 
 CRITERIA = {
     "bedrooms_preferred": 3,
     "bedrooms_min": 2,
-    "bathrooms": "1-2",
+    "bathrooms_preferred": 2,
+    "bathrooms_min": 1,
     "max_price": 85000,
-    "max_distance_miles": 0.6
+    "max_distance_miles": 0.6,
+    "condition": "move-in ready or minor cosmetic work only"
 }
 
 def distance_from_augustana(lat, lng):
@@ -31,6 +35,7 @@ def condense_listings(listings):
             distance = distance_from_augustana(listing["latitude"], listing["longitude"])
             if distance <= CRITERIA["max_distance_miles"]:
                 result.append({
+                    "zpid": listing["zpid"],
                     "address": listing["address"],
                     "price": listing["price"],
                     "bedrooms": listing["bedrooms"],
@@ -49,13 +54,32 @@ def condense_listings(listings):
     return result
 
 def run_search():
+    init_db()
     listings = fetch_listings()
     condensed = condense_listings(listings)
-    scored = score_listings(condensed, CRITERIA)
+        
+        
+    new_or_dropped = []
+    
+    for listing in condensed:
+        zpid = listing["zpid"]
+        price = listing["price"]
+        
+        last_price = get_last_price(zpid)
+        
+        if last_price is None or last_price * PRICE_DROP_THRESHOLD >= price:
+            new_or_dropped.append(listing)
+            
+    scored = score_listings(new_or_dropped, CRITERIA)
+    
     for listing in scored:
         print()
         print(listing)
         print()
+    
+    for listing in new_or_dropped:
+        upsert_listing(listing["zpid"], listing["price"])
+                        
 
 if __name__ == "__main__":
     run_search()

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(python -m cron.run_search)",
+      "Bash(python -c \"import sqlite3; conn = sqlite3.connect\\('housedda.db'\\); print\\('seen_listings rows:', conn.execute\\('SELECT COUNT\\(*\\) FROM seen_listings'\\).fetchone\\(\\)[0]\\); conn.close\\(\\)\")",
+      "Bash(python -c \"import sqlite3; conn = sqlite3.connect\\('housedda.db'\\); rows = conn.execute\\('SELECT * FROM seen_listings'\\).fetchall\\(\\); [print\\(r\\) for r in rows]; conn.close\\(\\)\")"
+    ]
+  }
+}
