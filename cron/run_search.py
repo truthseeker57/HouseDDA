@@ -8,9 +8,11 @@ AUGUSTANA_LNG = -90.55139102323895
 CRITERIA = {
     "bedrooms_preferred": 3,
     "bedrooms_min": 2,
-    "bathrooms": "1-2",
+    "bathrooms_preferred": 2,
+    "bathrooms_min": 1,
     "max_price": 85000,
-    "max_distance_miles": 0.6
+    "max_distance_miles": 0.6,
+    "condition": "move-in ready or minor cosmetic work only"
 }
 
 def distance_from_augustana(lat, lng):

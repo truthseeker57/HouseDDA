@@ -23,6 +23,10 @@ Bedrooms:
 - 3 beds: meets criteria, neutral
 - 2 beds: subtract 1.5 points
 
+Bathrooms:
+- 2 baths: meets criteria, neutral
+- 1 baths: subtract 1.5 points
+
 Price signals:
 - Price cut: neutral, note it but don't penalize
 - Price significantly below tax assessed value: flag as potential condition issue
@@ -55,7 +59,7 @@ Buyer criteria:
 - Bathrooms: {criteria['bathrooms']}
 - Max price: ${criteria['max_price']}
 - Max distance: {criteria['max_distance_miles']} miles
-- Condition: move-in ready or minor cosmetic work only
+- Condition: {criteria[condition]}
 
 Listings to evaluate:
 {json.dumps(listings, indent=2)}
