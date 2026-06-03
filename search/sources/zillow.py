@@ -23,7 +23,7 @@ def fetch_listings():
     }
     
     
-    response = httpx.post(url, json=payload, headers=headers)
+    response = httpx.post(url, json=payload, headers=headers, timeout = 30.0)
     data = response.json()
     
     return data.get("listings", [])

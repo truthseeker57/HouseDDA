@@ -49,17 +49,17 @@ def score_listings(listings, criteria):
     print("LISTINGS BEING SENT:", len(listings))
     
     if not listings:
-        print("No listings to score — condense_listings returned empty")
+        print("No listings to score.")
         return []
 
     user_message = f"""
 Buyer criteria:
 - Home type: Single family
 - Bedrooms: {criteria['bedrooms_preferred']} preferred, {criteria['bedrooms_min']} minimum
-- Bathrooms: {criteria['bathrooms']}
+- Bathrooms: {criteria['bathrooms_preferred']} preferred, {criteria['bathrooms_min']} minimum
 - Max price: ${criteria['max_price']}
 - Max distance: {criteria['max_distance_miles']} miles
-- Condition: {criteria[condition]}
+- Condition: {criteria['condition']}
 
 Listings to evaluate:
 {json.dumps(listings, indent=2)}
