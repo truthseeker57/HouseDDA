@@ -2,6 +2,8 @@ import math
 from search.sources.zillow import fetch_listings
 from ai.scorer import score_listings
 from db.database import init_db, get_last_price, upsert_listing
+from bot.sender import send_message
+from bot.formatters import format_listing
 
 AUGUSTANA_LAT = 41.50302625752872
 AUGUSTANA_LNG = -90.55139102323895
@@ -57,26 +59,38 @@ def run_search():
     init_db()
     listings = fetch_listings()
     condensed = condense_listings(listings)
-        
-        
+
     new_or_dropped = []
-    
     for listing in condensed:
         zpid = listing["zpid"]
         price = listing["price"]
-        
         last_price = get_last_price(zpid)
-        
+
         if last_price is None or last_price * PRICE_DROP_THRESHOLD >= price:
             new_or_dropped.append(listing)
-            
+
     scored = score_listings(new_or_dropped, CRITERIA)
-    
-    for listing in scored:
-        print()
-        print(listing)
-        print()
-    
+
+    # match each scored result back to its original listing by address
+    listings_by_address = {listing["address"]: listing for listing in new_or_dropped}
+
+    complete = []
+    for result in scored:
+        original = listings_by_address[result["address"]]
+        complete.append({
+            "address": result["address"],
+            "rating": result["rating"],
+            "summary": result["summary"],
+            "price": original["price"],
+            "distance_miles": original["distance_miles"],
+            "details": original["details"],
+            "img": original["img"],
+        })
+
+    for listing in complete:
+        message = format_listing(listing)
+        send_message(message)
+
     for listing in new_or_dropped:
         upsert_listing(listing["zpid"], listing["price"])
                         
